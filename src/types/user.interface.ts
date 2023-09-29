@@ -1,6 +1,6 @@
 import { Document } from "mongoose";
 
-import { GendersEnum } from "../enums";
+import { GendersEnum } from "../enums/Gender.enum";
 
 export interface UserInterface extends Document {
   name?: string;
