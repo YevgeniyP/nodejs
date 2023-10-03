@@ -18,7 +18,9 @@ class UserRepository {
     userId: string,
     updateUser: UserInterface,
   ): Promise<UserInterface | null> {
-    return await User.findByIdAndUpdate(userId, updateUser);
+    return await User.findByIdAndUpdate(userId, updateUser, {
+      returnDocument: "after",
+    });
   }
 
   public async deleteById(userId: string): Promise<UserInterface | null> {

@@ -1,21 +1,23 @@
 import { NextFunction, Request, Response } from "express";
+import { ObjectSchema } from "joi";
 
 import { ApiError } from "../errors/ApiError";
 import { userService } from "../services/user.service";
-import { UserValidator } from "../validators/user.validator";
 
 class UserMiddleware {
-  public bodyValidOrThrow(req: Request, res: Response, next: NextFunction) {
-    try {
-      const { error, value } = UserValidator.create.validate(req.body);
-      if (error) {
-        throw new ApiError(400, error.message);
+  public bodyValidOrThrow(validator: ObjectSchema) {
+    return (req: Request, res: Response, next: NextFunction) => {
+      try {
+        const { error, value } = validator.validate(req.body);
+        if (error) {
+          throw new ApiError(400, error.message);
+        }
+        req.body = value;
+        next();
+      } catch (error) {
+        next(error);
       }
-      req.body = value;
-      next();
-    } catch (error) {
-      next(error);
-    }
+    };
   }
 
   public async emailRequireOrThrow(
@@ -26,7 +28,7 @@ class UserMiddleware {
     try {
       const email = await userService.checkEmail(req.body.email);
       if (email) {
-        throw new ApiError(400, "Email Require");
+        throw new ApiError(400, "Email isn't valid");
       }
       next();
     } catch (error) {
