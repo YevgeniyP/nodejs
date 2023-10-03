@@ -1,59 +1,85 @@
 import { NextFunction, Request, Response } from "express";
 
-import { User } from "../models/User.model";
+import { ApiError } from "../errors/ApiError";
 import { userService } from "../services/user.service";
+// import { UserInterface } from "../types/user.interface";
 
 class UserController {
-  public async findAll(req: Request, res: Response) {
+  public async findAll(
+    req: Request,
+    res: Response,
+    next: NextFunction,
+  ): Promise<void> {
     const users = await userService.findAll();
+
     res.json(users);
   }
 
-  public async findById(req: Request, res: Response, next: NextFunction) {
+  public async findById(
+    req: Request,
+    res: Response,
+    next: NextFunction,
+  ): Promise<void> {
     try {
       const { id } = req.params;
-      const currentUser = await User.findById(id);
-      if (!currentUser) throw new Error("User not found");
+      const currentUser = await userService.findById(id);
+
       res.json(currentUser);
     } catch (error) {
       next(error);
     }
   }
 
-  public async create(req: Request, res: Response) {
+  public async create(
+    req: Request,
+    res: Response,
+    next: NextFunction,
+  ): Promise<void> {
     try {
-      const newUser = await User.create({ ...req.body });
-      return res.status(201).json(newUser);
-    } catch (e) {
-      return res.status(400).json(e);
+      const newUser = await userService.create(req.body);
+      if (!newUser) {
+        throw new ApiError(400, "");
+      }
+
+      res.status(201).json(newUser);
+    } catch (error) {
+      next(error);
     }
   }
 
-  public async updateById(req: Request, res: Response) {
+  public async updateById(
+    req: Request,
+    res: Response,
+    next: NextFunction,
+  ): Promise<void> {
     try {
       const { id } = req.params;
-      const currentUser = await User.findByIdAndUpdate(
-        id,
-        { ...req.body },
-        { returnDocument: "after" },
-      );
-      if (!currentUser) throw new Error("User not found");
-      return res.status(201).json(currentUser);
-    } catch (e) {
-      return res.status(400).json(e);
+      const currentUser = await userService.updateById(id, req.body);
+      if (!currentUser) {
+        throw new ApiError(404, "User not found");
+      }
+
+      res.status(201).json(currentUser);
+    } catch (error) {
+      next(error);
     }
   }
 
-  public async deleteById(req: Request, res: Response) {
+  public async deleteById(
+    req: Request,
+    res: Response,
+    next: NextFunction,
+  ): Promise<void> {
     try {
       const { id } = req.params;
-      const currentUser = await User.findByIdAndRemove(id, {
-        returnDocument: "before",
-      });
-      if (!currentUser) throw new Error("User not found");
-      return res.status(200).json(currentUser);
-    } catch (e) {
-      return res.status(400).json(e);
+      const currentUser = await userService.deleteById(id);
+      if (!currentUser) {
+        throw new ApiError(404, "User not found");
+      }
+
+      res.status(204).json(currentUser);
+    } catch (error) {
+      next(error);
     }
   }
 }
